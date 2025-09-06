@@ -15,7 +15,7 @@ export class AuthService {
   }
 
   /** ✅ Tải user từ localStorage, có thể gọi lại bất cứ lúc nào */
-  loadUserFromStorage(): void {
+  public loadUserFromStorage(): void {
     const storedUser = localStorage.getItem(this.USER_KEY);
     if (storedUser && storedUser !== 'undefined') {
       try {
@@ -57,7 +57,7 @@ export class AuthService {
   login(username: string, password: string) {
     return this.http.post<{ token: string; user: any }>(
       `${this.baseUrl}/login`,
-      { username, password }
+      { username, password } 
     );
   }
 

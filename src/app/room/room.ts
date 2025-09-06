@@ -36,11 +36,18 @@ export class RoomComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    console.log('🔧 RoomComponent init');
-    // Đảm bảo user đã được load từ localStorage
-    this.authService.loadUserFromStorage();
-    this.loadRooms();
+  console.log('🔧 RoomComponent init');
+  // Load lại user từ localStorage (đảm bảo sau refresh)
+  this.authService.loadUserFromStorage();
+  const adminId = this.authService.getCurrentUserId();
+  if (!adminId) {
+    alert('❌ Bạn chưa đăng nhập!');
+    this.router.navigate(['/login']);
+    return;
   }
+
+  this.loadRooms();
+}
 
   // Load danh sách phòng
   loadRooms(): void {
@@ -86,6 +93,8 @@ export class RoomComponent implements OnInit {
         },
         error: (err) => console.error('❌ Lỗi tạo phòng:', err)
       });
+      console.log('🔑 Token JWT:', this.authService.getToken());
+
   }
 
   // Vào phòng
