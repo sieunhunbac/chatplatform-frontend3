@@ -34,7 +34,6 @@ export class VideoCall implements AfterViewInit, OnDestroy {
     const backendUrl = 'https://chatplatform3-11-yl72.onrender.com';
 
     try {
-      // Lấy token từ backend
       const token = await this.http
         .get(`${backendUrl}/api/agora/token?channelName=${channelName}&uid=${this.uid}`, { responseType: 'text' })
         .toPromise();
@@ -45,23 +44,16 @@ export class VideoCall implements AfterViewInit, OnDestroy {
         return;
       }
 
-      // Tạo client và join channel
       this.client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
       await this.client.join(appId, channelName, token, this.uid);
       console.log('Joined channel with UID:', this.uid);
 
-      // Tạo local tracks
       this.localTracks.videoTrack = await AgoraRTC.createCameraVideoTrack();
       this.localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
 
-      // Publish local tracks
       await this.client.publish([this.localTracks.videoTrack, this.localTracks.audioTrack]);
-      console.log('Published local tracks');
-
-      // Play local video
       this.localTracks.videoTrack.play('local-player');
 
-      // Remote users
       this.client.on('user-published', async (user, mediaType) => {
         await this.client.subscribe(user, mediaType);
 
@@ -112,21 +104,16 @@ export class VideoCall implements AfterViewInit, OnDestroy {
 
   async toggleScreenShare() {
     if (!this.isSharingScreen) {
-      try {
-        this.screenTrack = await AgoraRTC.createScreenVideoTrack({ encoderConfig: '1080p_1' }) as ILocalVideoTrack;
+      this.screenTrack = await AgoraRTC.createScreenVideoTrack({ encoderConfig: '1080p_1' }) as ILocalVideoTrack;
 
-        if (this.localTracks.videoTrack) {
-          await this.client.unpublish(this.localTracks.videoTrack);
-          this.localTracks.videoTrack.stop();
-        }
-
-        await this.client.publish(this.screenTrack);
-        this.screenTrack.play('local-player');
-        this.isSharingScreen = true;
-        console.log('Started screen share');
-      } catch (err) {
-        console.error('Lỗi share screen:', err);
+      if (this.localTracks.videoTrack) {
+        await this.client.unpublish(this.localTracks.videoTrack);
+        this.localTracks.videoTrack.stop();
       }
+
+      await this.client.publish(this.screenTrack);
+      this.screenTrack.play('local-player');
+      this.isSharingScreen = true;
     } else {
       if (this.screenTrack) {
         await this.client.unpublish(this.screenTrack);
@@ -140,26 +127,18 @@ export class VideoCall implements AfterViewInit, OnDestroy {
         this.localTracks.videoTrack.play('local-player');
       }
       this.isSharingScreen = false;
-      console.log('Stopped screen share');
     }
   }
 
   async ngOnDestroy() {
-    try {
-      this.localTracks.videoTrack?.stop();
-      this.localTracks.videoTrack?.close();
-      this.localTracks.audioTrack?.stop();
-      this.localTracks.audioTrack?.close();
-
-      if (this.screenTrack) {
-        this.screenTrack.stop();
-        this.screenTrack.close();
-      }
-
-      await this.client.leave();
-      console.log('Left channel');
-    } catch (err) {
-      console.error('Lỗi khi leave channel:', err);
+    this.localTracks.videoTrack?.stop();
+    this.localTracks.videoTrack?.close();
+    this.localTracks.audioTrack?.stop();
+    this.localTracks.audioTrack?.close();
+    if (this.screenTrack) {
+      this.screenTrack.stop();
+      this.screenTrack.close();
     }
+    await this.client.leave();
   }
 }
