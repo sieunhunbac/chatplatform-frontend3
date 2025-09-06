@@ -6,8 +6,8 @@ import { toSignal } from '@angular/core/rxjs-interop';
 @Injectable({ providedIn: 'root' })
 export class RoomService {
   // URL backend public
-  private baseUrl = 'https://chatplatform3-11.onrender.com/api/chatrooms';
-  private roomsUrl = 'https://chatplatform3-11.onrender.com/api/rooms';
+  private baseUrl = 'https://chatplatform3-11-yl72.onrender.com/api/chatrooms';
+  private roomsUrl = 'https://chatplatform3-11-yl72.onrender.com/api/rooms';
 
   constructor(private http: HttpClient) {}
 

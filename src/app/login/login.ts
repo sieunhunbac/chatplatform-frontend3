@@ -33,7 +33,7 @@ export class Login {
       this.router.navigate(['/room']);
 
       // test API backend
-      this.http.get('https://chatplatform3-11.onrender.com/api/test', { responseType: 'text' })
+      this.http.get('https://chatplatform3-11-yl72.onrender.com/api/test', { responseType: 'text' })
         .subscribe(res => console.log('📡 Kết quả API test:', res));
     },
     error: (err) => {

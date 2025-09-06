@@ -27,7 +27,7 @@ export class RoomComponent implements OnInit {
   roomName = '';
   roomDesc = '';
 
-  private readonly API_BASE = 'https://chatplatform3-11.onrender.com/api/rooms';
+  private readonly API_BASE = 'https://chatplatform3-11-yl72.onrender.com/api/rooms';
 
   constructor(
     private http: HttpClient,

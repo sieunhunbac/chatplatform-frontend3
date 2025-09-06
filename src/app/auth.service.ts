@@ -8,7 +8,7 @@ export class AuthService {
   private readonly USER_KEY = 'user';
 
   // URL backend online Render
-  private readonly baseUrl = 'https://chatplatform3-11.onrender.com/api/auth';
+  private readonly baseUrl = 'https://chatplatform3-11-yl72.onrender.com';
 
   constructor(private http: HttpClient) {
     this.loadUserFromStorage();
