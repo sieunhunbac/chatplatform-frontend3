@@ -75,6 +75,8 @@ export class AuthService {
     this.user = user;
     localStorage.setItem(this.TOKEN_KEY, token);
     localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+      console.log('💾 setUser xong', this.user, token);
+
   }
 
   /** Lấy headers kèm token JWT */
