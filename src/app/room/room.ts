@@ -40,11 +40,11 @@ export class RoomComponent implements OnInit {
   // Load lại user từ localStorage (đảm bảo sau refresh)
   this.authService.loadUserFromStorage();
   const adminId = this.authService.getCurrentUserId();
-  if (!adminId) {
-    alert('❌ Bạn chưa đăng nhập!');
-    this.router.navigate(['/login']);
-    return;
-  }
+console.log('adminId:', adminId); // ✅ kiểm tra xem có lấy được chưa
+if (!adminId) {
+  alert('❌ Bạn chưa đăng nhập!');
+  return;
+}
 
   this.loadRooms();
 }

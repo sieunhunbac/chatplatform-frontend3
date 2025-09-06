@@ -71,13 +71,12 @@ export class AuthService {
 
   /** Lưu user + token vào service và localStorage */
   setUser(user: any, token: string): void {
-    if (!user || !token) return;
-    this.user = user;
-    localStorage.setItem(this.TOKEN_KEY, token);
-    localStorage.setItem(this.USER_KEY, JSON.stringify(user));
-      console.log('💾 setUser xong', this.user, token);
-
-  }
+  if (!user || !token) return;
+  this.user = user;
+  localStorage.setItem(this.TOKEN_KEY, token);
+  localStorage.setItem('user', JSON.stringify(user)); // lưu user
+  console.log('💾 setUser xong', this.user, token);
+}
 
   /** Lấy headers kèm token JWT */
   getAuthHeaders(): { headers: any } {
