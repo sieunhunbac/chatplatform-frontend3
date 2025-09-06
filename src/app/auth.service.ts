@@ -8,7 +8,7 @@ export class AuthService {
   private readonly USER_KEY = 'user';
 
   // URL backend online Render
-  private readonly baseUrl = 'https://chatplatform3-11-yl72.onrender.com';
+  private readonly baseUrl = 'https://chatplatform3-11-yl72.onrender.com/api/auth';
 
   constructor(private http: HttpClient) {
     this.loadUserFromStorage();
@@ -49,10 +49,18 @@ export class AuthService {
     this.user = null;
   }
 
-  // Login
+  // Login - sửa URL đúng
   login(username: string, password: string) {
     return this.http.post<{ token: string; user: any }>(
-      `${this.baseUrl}/login`,
+      `${this.baseUrl}/login`, // ✅ đây là /api/auth/login
+      { username, password }
+    );
+  }
+
+  // Register (nếu cần)
+  register(username: string, password: string) {
+    return this.http.post<{ token: string; user: any }>(
+      `${this.baseUrl}/register`,
       { username, password }
     );
   }
