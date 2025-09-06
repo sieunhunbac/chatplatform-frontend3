@@ -1,4 +1,4 @@
-import { Component, AfterViewInit, inject, Input } from '@angular/core';
+import { Component, AfterViewInit, inject, Input, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
@@ -7,6 +7,7 @@ import AgoraRTC, {
   ILocalVideoTrack,
   ILocalAudioTrack,
   ILocalTrack,
+  UID
 } from 'agora-rtc-sdk-ng';
 
 @Component({
@@ -15,7 +16,7 @@ import AgoraRTC, {
   imports: [CommonModule],
   templateUrl: './video-call.html',
 })
-export class VideoCall implements AfterViewInit {
+export class VideoCall implements AfterViewInit, OnDestroy {
   private http = inject(HttpClient);
   @Input() roomId!: string;
 
@@ -29,53 +30,69 @@ export class VideoCall implements AfterViewInit {
   private isCameraOn = true;
   private isMicOn = true;
   private isSharingScreen = false;
+  private uid!: UID;
 
   async ngAfterViewInit() {
     if (!this.roomId) this.roomId = 'default-room';
     const channelName = this.roomId;
-    const uid = Math.floor(Math.random() * 100000);
+    this.uid = Math.floor(Math.random() * 100000); // ✅ UID number
     const appId = environment.agoraAppId;
-
-    // **URL backend deploy**
     const backendUrl = 'https://chatplatform3-11-yl72.onrender.com';
 
     try {
       const token = await this.http
-        .get(`${backendUrl}/api/agora/token?channelName=${channelName}&uid=${uid}`, { responseType: 'text' })
+        .get(`${backendUrl}/api/agora/token?channelName=${channelName}&uid=${this.uid}`, { responseType: 'text' })
         .toPromise();
-        console.log('Received token:', token);
+
+      console.log('Received token:', token, 'UID:', this.uid);
       if (!token) {
         console.error('Token chưa nhận được từ backend!');
         return;
       }
 
+      // 1️⃣ Tạo client và join channel
       this.client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
-      await this.client.join(appId, channelName, token, uid);
+      await this.client.join(appId, channelName, token, this.uid);
+      console.log('Joined channel with UID:', this.uid);
 
-      // Tạo local tracks
+      // 2️⃣ Tạo local tracks
       this.localTracks.videoTrack = await AgoraRTC.createCameraVideoTrack();
       this.localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
+
+      // 3️⃣ Publish local tracks
       await this.client.publish([this.localTracks.videoTrack, this.localTracks.audioTrack]);
+      console.log('Published local tracks');
+
+      // 4️⃣ Play local video
       this.localTracks.videoTrack.play('local-player');
 
-      // Remote users
+      // 5️⃣ Remote users
       this.client.on('user-published', async (user, mediaType) => {
+        console.log('Remote user published:', user.uid, 'mediaType:', mediaType);
         await this.client.subscribe(user, mediaType);
+
         if (mediaType === 'video') {
           const container = document.getElementById('remote-container');
-          const remoteDiv = document.createElement('div');
-          remoteDiv.id = `remote-${user.uid}`;
-          remoteDiv.style.width = '320px';
-          remoteDiv.style.height = '240px';
-          remoteDiv.style.border = '1px solid gray';
-          remoteDiv.style.marginBottom = '8px';
-          container?.appendChild(remoteDiv);
+          if (!container) return;
+
+          let remoteDiv = document.getElementById(`remote-${user.uid}`);
+          if (!remoteDiv) {
+            remoteDiv = document.createElement('div');
+            remoteDiv.id = `remote-${user.uid}`;
+            remoteDiv.style.width = '320px';
+            remoteDiv.style.height = '240px';
+            remoteDiv.style.border = '1px solid gray';
+            remoteDiv.style.marginBottom = '8px';
+            container.appendChild(remoteDiv);
+          }
           user.videoTrack?.play(remoteDiv);
         }
+
         if (mediaType === 'audio') user.audioTrack?.play();
       });
 
       this.client.on('user-unpublished', (user, mediaType) => {
+        console.log('Remote user unpublished:', user.uid, 'mediaType:', mediaType);
         if (mediaType === 'video') {
           const remoteDiv = document.getElementById(`remote-${user.uid}`);
           remoteDiv?.remove();
@@ -116,6 +133,7 @@ export class VideoCall implements AfterViewInit {
         await this.client.publish(this.screenTrack);
         this.screenTrack.play('local-player');
         this.isSharingScreen = true;
+        console.log('Started screen share');
       } catch (err) {
         console.error('Lỗi share screen:', err);
       }
@@ -132,6 +150,26 @@ export class VideoCall implements AfterViewInit {
         this.localTracks.videoTrack.play('local-player');
       }
       this.isSharingScreen = false;
+      console.log('Stopped screen share');
+    }
+  }
+
+  async ngOnDestroy() {
+    try {
+      this.localTracks.videoTrack?.stop();
+      this.localTracks.videoTrack?.close();
+      this.localTracks.audioTrack?.stop();
+      this.localTracks.audioTrack?.close();
+
+      if (this.screenTrack) {
+        this.screenTrack.stop();
+        this.screenTrack.close();
+      }
+
+      await this.client.leave();
+      console.log('Left channel');
+    } catch (err) {
+      console.error('Lỗi khi leave channel:', err);
     }
   }
 }
