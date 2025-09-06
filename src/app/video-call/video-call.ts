@@ -15,10 +15,7 @@ export class VideoCall implements AfterViewInit, OnDestroy {
   @Input() roomId!: string;
 
   private client!: IAgoraRTCClient;
-  private localTracks: { videoTrack: ILocalVideoTrack | null; audioTrack: ILocalAudioTrack | null } = {
-    videoTrack: null,
-    audioTrack: null,
-  };
+  private localTracks: { videoTrack: ILocalVideoTrack | null; audioTrack: ILocalAudioTrack | null } = { videoTrack: null, audioTrack: null };
   private screenTrack: ILocalTrack | null = null;
 
   private isCameraOn = true;
@@ -29,40 +26,39 @@ export class VideoCall implements AfterViewInit, OnDestroy {
   async ngAfterViewInit() {
     if (!this.roomId) this.roomId = 'default-room';
     const channelName = this.roomId;
-    const uid: number = Math.floor(Math.random() * 100000); 
+    this.uid = Math.floor(Math.random() * 100000); // ✅ UID number
     const appId = environment.agoraAppId;
     const backendUrl = 'https://chatplatform3-11-yl72.onrender.com';
 
     try {
+      // fetch token từ backend với UID frontend tự sinh
       const token = await this.http
         .get(`${backendUrl}/api/agora/token?channelName=${channelName}&uid=${this.uid}`, { responseType: 'text' })
         .toPromise();
+      console.log('UID:', this.uid, 'Token:', token);
+      if (!token) return console.error('Token không hợp lệ!');
 
-      console.log('Received token:', token, 'UID:', this.uid);
-      if (!token) {
-        console.error('Token chưa nhận được từ backend!');
-        return;
-      }
-
+      // join channel
       this.client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
       await this.client.join(appId, channelName, token, this.uid);
       console.log('Joined channel with UID:', this.uid);
 
+      // tạo local tracks
       this.localTracks.videoTrack = await AgoraRTC.createCameraVideoTrack();
       this.localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
 
+      // publish
       await this.client.publish([this.localTracks.videoTrack, this.localTracks.audioTrack]);
       this.localTracks.videoTrack.play('local-player');
+      console.log('Local video published');
 
+      // remote users
       this.client.on('user-published', async (user, mediaType) => {
         await this.client.subscribe(user, mediaType);
-
         if (mediaType === 'video') {
           const container = document.getElementById('remote-container');
-          if (!container) return;
-
           let remoteDiv = document.getElementById(`remote-${user.uid}`);
-          if (!remoteDiv) {
+          if (!remoteDiv && container) {
             remoteDiv = document.createElement('div');
             remoteDiv.id = `remote-${user.uid}`;
             remoteDiv.style.width = '320px';
@@ -71,9 +67,8 @@ export class VideoCall implements AfterViewInit, OnDestroy {
             remoteDiv.style.marginBottom = '8px';
             container.appendChild(remoteDiv);
           }
-          user.videoTrack?.play(remoteDiv);
+          user.videoTrack?.play(remoteDiv!);
         }
-
         if (mediaType === 'audio') user.audioTrack?.play();
       });
 
@@ -90,55 +85,27 @@ export class VideoCall implements AfterViewInit, OnDestroy {
     }
   }
 
-  toggleCamera() {
-    if (!this.localTracks.videoTrack) return;
-    this.isCameraOn = !this.isCameraOn;
-    this.localTracks.videoTrack.setEnabled(this.isCameraOn);
-  }
-
-  toggleMic() {
-    if (!this.localTracks.audioTrack) return;
-    this.isMicOn = !this.isMicOn;
-    this.localTracks.audioTrack.setEnabled(this.isMicOn);
-  }
+  toggleCamera() { if (this.localTracks.videoTrack) { this.isCameraOn = !this.isCameraOn; this.localTracks.videoTrack.setEnabled(this.isCameraOn); } }
+  toggleMic() { if (this.localTracks.audioTrack) { this.isMicOn = !this.isMicOn; this.localTracks.audioTrack.setEnabled(this.isMicOn); } }
 
   async toggleScreenShare() {
     if (!this.isSharingScreen) {
       this.screenTrack = await AgoraRTC.createScreenVideoTrack({ encoderConfig: '1080p_1' }) as ILocalVideoTrack;
-
-      if (this.localTracks.videoTrack) {
-        await this.client.unpublish(this.localTracks.videoTrack);
-        this.localTracks.videoTrack.stop();
-      }
-
+      if (this.localTracks.videoTrack) { await this.client.unpublish(this.localTracks.videoTrack); this.localTracks.videoTrack.stop(); }
       await this.client.publish(this.screenTrack);
       this.screenTrack.play('local-player');
       this.isSharingScreen = true;
     } else {
-      if (this.screenTrack) {
-        await this.client.unpublish(this.screenTrack);
-        this.screenTrack.stop();
-        this.screenTrack.close();
-        this.screenTrack = null;
-      }
-
-      if (this.localTracks.videoTrack) {
-        await this.client.publish(this.localTracks.videoTrack);
-        this.localTracks.videoTrack.play('local-player');
-      }
+      if (this.screenTrack) { await this.client.unpublish(this.screenTrack); this.screenTrack.stop(); this.screenTrack.close(); this.screenTrack = null; }
+      if (this.localTracks.videoTrack) { await this.client.publish(this.localTracks.videoTrack); this.localTracks.videoTrack.play('local-player'); }
       this.isSharingScreen = false;
     }
   }
 
   async ngOnDestroy() {
-    this.localTracks.videoTrack?.stop();
-    this.localTracks.videoTrack?.close();
-    this.localTracks.audioTrack?.stop();
-    this.localTracks.audioTrack?.close();
-    if (this.screenTrack) {
-      this.screenTrack.stop();
-      this.screenTrack.close();
-    }
+    this.localTracks.videoTrack?.stop(); this.localTracks.videoTrack?.close();
+    this.localTracks.audioTrack?.stop(); this.localTracks.audioTrack?.close();
+    if (this.screenTrack) { this.screenTrack.stop(); this.screenTrack.close(); }
     await this.client.leave();
   }
 }
