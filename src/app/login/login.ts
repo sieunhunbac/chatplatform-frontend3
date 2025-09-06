@@ -25,21 +25,20 @@ export class Login {
   login() {
   console.log('🔐 Sending login with:', this.username, this.password);
   this.auth.login(this.username, this.password).subscribe({
-    next: (res) => {
-      // lưu token và user vào AuthService
-      this.auth.setUser(res.user, res.token);
+  next: (res) => {
+    // Lưu user + token vào localStorage
+    this.auth.setUser(res.user, res.token);
 
-      // chuyển sang Room page
-      this.router.navigate(['/room']);
+    console.log('💾 Token lưu xong:', localStorage.getItem('token'));
+    console.log('💾 User lưu xong:', localStorage.getItem('user'));
 
-      // test API backend
-      this.http.get('https://chatplatform3-11-yl72.onrender.com/api/test', { responseType: 'text' })
-        .subscribe(res => console.log('📡 Kết quả API test:', res));
-    },
-    error: (err) => {
-      console.error('🚫 Login failed', err);
-      alert('Sai tài khoản hoặc mật khẩu!');
-    }
-  });
+    // chuyển sang Room page
+    this.router.navigate(['/room']);
+  },
+  error: (err) => {
+    console.error('🚫 Login failed', err);
+    alert('Sai tài khoản hoặc mật khẩu!');
+  }
+});
 }
 }
