@@ -43,7 +43,7 @@ export class VideoCall implements AfterViewInit {
       const token = await this.http
         .get(`${backendUrl}/api/agora/token?channelName=${channelName}&uid=${uid}`, { responseType: 'text' })
         .toPromise();
-
+        console.log('Received token:', token);
       if (!token) {
         console.error('Token chưa nhận được từ backend!');
         return;
@@ -55,7 +55,6 @@ export class VideoCall implements AfterViewInit {
       // Tạo local tracks
       this.localTracks.videoTrack = await AgoraRTC.createCameraVideoTrack();
       this.localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
-
       await this.client.publish([this.localTracks.videoTrack, this.localTracks.audioTrack]);
       this.localTracks.videoTrack.play('local-player');
 
