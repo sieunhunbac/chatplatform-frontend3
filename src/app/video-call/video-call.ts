@@ -2,13 +2,7 @@ import { Component, AfterViewInit, inject, Input, OnDestroy } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
-import AgoraRTC, {
-  IAgoraRTCClient,
-  ILocalVideoTrack,
-  ILocalAudioTrack,
-  ILocalTrack,
-  UID
-} from 'agora-rtc-sdk-ng';
+import AgoraRTC, { IAgoraRTCClient, ILocalVideoTrack, ILocalAudioTrack, ILocalTrack, UID } from 'agora-rtc-sdk-ng';
 
 @Component({
   selector: 'app-video-call',
@@ -40,6 +34,7 @@ export class VideoCall implements AfterViewInit, OnDestroy {
     const backendUrl = 'https://chatplatform3-11-yl72.onrender.com';
 
     try {
+      // Lấy token từ backend
       const token = await this.http
         .get(`${backendUrl}/api/agora/token?channelName=${channelName}&uid=${this.uid}`, { responseType: 'text' })
         .toPromise();
@@ -50,25 +45,24 @@ export class VideoCall implements AfterViewInit, OnDestroy {
         return;
       }
 
-      // 1️⃣ Tạo client và join channel
+      // Tạo client và join channel
       this.client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
       await this.client.join(appId, channelName, token, this.uid);
       console.log('Joined channel with UID:', this.uid);
 
-      // 2️⃣ Tạo local tracks
+      // Tạo local tracks
       this.localTracks.videoTrack = await AgoraRTC.createCameraVideoTrack();
       this.localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
 
-      // 3️⃣ Publish local tracks
+      // Publish local tracks
       await this.client.publish([this.localTracks.videoTrack, this.localTracks.audioTrack]);
       console.log('Published local tracks');
 
-      // 4️⃣ Play local video
+      // Play local video
       this.localTracks.videoTrack.play('local-player');
 
-      // 5️⃣ Remote users
+      // Remote users
       this.client.on('user-published', async (user, mediaType) => {
-        console.log('Remote user published:', user.uid, 'mediaType:', mediaType);
         await this.client.subscribe(user, mediaType);
 
         if (mediaType === 'video') {
@@ -92,7 +86,6 @@ export class VideoCall implements AfterViewInit, OnDestroy {
       });
 
       this.client.on('user-unpublished', (user, mediaType) => {
-        console.log('Remote user unpublished:', user.uid, 'mediaType:', mediaType);
         if (mediaType === 'video') {
           const remoteDiv = document.getElementById(`remote-${user.uid}`);
           remoteDiv?.remove();
@@ -105,21 +98,18 @@ export class VideoCall implements AfterViewInit, OnDestroy {
     }
   }
 
-  // Toggle camera
   toggleCamera() {
     if (!this.localTracks.videoTrack) return;
     this.isCameraOn = !this.isCameraOn;
     this.localTracks.videoTrack.setEnabled(this.isCameraOn);
   }
 
-  // Toggle mic
   toggleMic() {
     if (!this.localTracks.audioTrack) return;
     this.isMicOn = !this.isMicOn;
     this.localTracks.audioTrack.setEnabled(this.isMicOn);
   }
 
-  // Share screen
   async toggleScreenShare() {
     if (!this.isSharingScreen) {
       try {
