@@ -24,23 +24,13 @@ export class Login {
 
   login() {
   console.log('🔐 Sending login with:', this.username, this.password);
-  this.auth.login(this.username, this.password).subscribe({
+this.auth.login(this.username, this.password).subscribe({
   next: (res) => {
-    const token = res.token;
-
-    // ❌ Backend không trả user → tạo user giả lập
-    const fakeUser = { username: this.username, id: 1 }; // id = 1 để test tạm
-    this.auth.setUser(fakeUser, token);
-
-    console.log('💾 Token lưu xong:', localStorage.getItem('token'));
-    console.log('👤 User lưu xong:', this.auth.getCurrentUser());
-
+    this.auth.setUser(res.user, res.token); // user thật, có id
     this.router.navigate(['/room']);
   },
-  error: (err) => {
-    alert('Sai tài khoản hoặc mật khẩu!');
-    console.error(err);
-  }
+  error: (err) => alert('Sai tài khoản hoặc mật khẩu!')
 });
+
 }
 }
