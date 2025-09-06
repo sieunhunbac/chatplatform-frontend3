@@ -29,7 +29,7 @@ export class VideoCall implements AfterViewInit, OnDestroy {
   async ngAfterViewInit() {
     if (!this.roomId) this.roomId = 'default-room';
     const channelName = this.roomId;
-    this.uid = Math.floor(Math.random() * 100000); // ✅ UID number
+    const uid: number = Math.floor(Math.random() * 100000); 
     const appId = environment.agoraAppId;
     const backendUrl = 'https://chatplatform3-11-yl72.onrender.com';
 
