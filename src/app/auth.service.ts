@@ -14,8 +14,8 @@ export class AuthService {
     this.loadUserFromStorage();
   }
 
-  // ✅ Tải user từ localStorage, bỏ qua nếu undefined hoặc lỗi parse
-  private loadUserFromStorage(): void {
+  /** ✅ Tải user từ localStorage, có thể gọi lại bất cứ lúc nào */
+  loadUserFromStorage(): void {
     const storedUser = localStorage.getItem(this.USER_KEY);
     if (storedUser && storedUser !== 'undefined') {
       try {
@@ -24,40 +24,44 @@ export class AuthService {
         console.error('❌ Lỗi parse user từ localStorage', e);
         this.user = null;
       }
+    } else {
+      this.user = null;
     }
   }
 
-  // Lấy toàn bộ thông tin user hiện tại
+  /** Lấy toàn bộ thông tin user hiện tại */
   getCurrentUser(): any {
+    if (!this.user) this.loadUserFromStorage();
     return this.user;
   }
 
-  // Lấy ID của user hiện tại (dùng làm adminId)
+  /** Lấy ID của user hiện tại */
   getCurrentUserId(): number | null {
-    return this.user?.id ?? null;
+    const currentUser = this.getCurrentUser();
+    return currentUser?.id ?? null;
   }
 
-  // Lấy token JWT
+  /** Lấy token JWT */
   getToken(): string | null {
     return localStorage.getItem(this.TOKEN_KEY);
   }
 
-  // Đăng xuất
+  /** Đăng xuất */
   logout(): void {
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.USER_KEY);
     this.user = null;
   }
 
-  // Login - sửa URL đúng
+  /** Login */
   login(username: string, password: string) {
     return this.http.post<{ token: string; user: any }>(
-      `${this.baseUrl}/login`, // ✅ đây là /api/auth/login
+      `${this.baseUrl}/login`,
       { username, password }
     );
   }
 
-  // Register (nếu cần)
+  /** Register */
   register(username: string, password: string) {
     return this.http.post<{ token: string; user: any }>(
       `${this.baseUrl}/register`,
@@ -65,7 +69,7 @@ export class AuthService {
     );
   }
 
-  // Lưu user + token
+  /** Lưu user + token vào service và localStorage */
   setUser(user: any, token: string): void {
     if (!user || !token) return;
     this.user = user;
@@ -73,7 +77,7 @@ export class AuthService {
     localStorage.setItem(this.USER_KEY, JSON.stringify(user));
   }
 
-  // Lấy headers kèm token JWT
+  /** Lấy headers kèm token JWT */
   getAuthHeaders(): { headers: any } {
     const token = this.getToken();
     return {

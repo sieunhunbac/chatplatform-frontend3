@@ -37,12 +37,16 @@ export class RoomComponent implements OnInit {
 
   ngOnInit(): void {
     console.log('🔧 RoomComponent init');
+    // Đảm bảo user đã được load từ localStorage
+    this.authService.loadUserFromStorage();
     this.loadRooms();
   }
 
   // Load danh sách phòng
   loadRooms(): void {
     const headers = this.authService.getAuthHeaders();
+    console.log('🔑 Headers khi load rooms:', headers.headers.Authorization);
+
     this.http.get<MeetingRoom[]>(this.API_BASE, headers)
       .subscribe({
         next: (data) => this.rooms = data || [],
@@ -70,6 +74,7 @@ export class RoomComponent implements OnInit {
     };
 
     const headers = this.authService.getAuthHeaders();
+    console.log('🔑 Headers khi tạo room:', headers.headers.Authorization);
 
     this.http.post<MeetingRoom>(this.API_BASE, body, headers)
       .subscribe({
