@@ -26,19 +26,20 @@ export class Login {
   console.log('🔐 Sending login with:', this.username, this.password);
   this.auth.login(this.username, this.password).subscribe({
   next: (res) => {
-    // Nếu backend chỉ trả token
     const token = res.token;
-    this.auth.setUser({ username: this.username, id: 1 }, token); 
-    // id giả lập 1, backend không trả id, nhưng RoomComponent cần adminId
 
-    console.log('💾 Token:', localStorage.getItem('token'));
-    console.log('👤 Current user:', this.auth.getCurrentUser());
+    // ❌ Backend không trả user → tạo user giả lập
+    const fakeUser = { username: this.username, id: 1 }; // id = 1 để test tạm
+    this.auth.setUser(fakeUser, token);
+
+    console.log('💾 Token lưu xong:', localStorage.getItem('token'));
+    console.log('👤 User lưu xong:', this.auth.getCurrentUser());
 
     this.router.navigate(['/room']);
   },
   error: (err) => {
-    console.error('🚫 Login failed', err);
     alert('Sai tài khoản hoặc mật khẩu!');
+    console.error(err);
   }
 });
 }
