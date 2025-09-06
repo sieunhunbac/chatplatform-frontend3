@@ -13,7 +13,7 @@ export class FileService {
     formData.append('file', file);
 
     // Nếu backend trả plain text URL
-    return this.http.post('http://localhost:8080/api/files/upload', formData, { responseType: 'text' })
+    return this.http.post('https://chatplatform3-11-yl72.onrender.com/api/files/upload', formData, { responseType: 'text' })
       .pipe(
         map(url => ({
           url,             // chuỗi URL trả về
