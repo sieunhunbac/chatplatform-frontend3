@@ -27,7 +27,7 @@ export class SocketService {
 
   constructor() {
     this.client = new Client({
-      webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
+      webSocketFactory: () => new SockJS('https://chatplatform3-11-yl72.onrender.com/ws'),
       reconnectDelay: 5000,
       debug: (str) => console.log('[STOMP]', str),
     });
