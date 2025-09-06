@@ -1,0 +1,26 @@
+/* Tin nhắn bên phải */
+.justify-end {
+  justify-content: flex-end;
+}
+
+/* Tin nhắn bên trái */
+.justify-start {
+  justify-content: flex-start;
+}
+
+/* Style tin nhắn */
+.bg-blue-500 {
+  background-color: #3b82f6;
+}
+
+.text-white {
+  color: #fff;
+}
+
+.bg-gray-200 {
+  background-color: #e5e7eb;
+}
+
+.text-gray-800 {
+  color: #1f2937;
+}

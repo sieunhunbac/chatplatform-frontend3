@@ -1,0 +1,12 @@
+li {
+  cursor: pointer;
+  margin: 8px 0;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  list-style: none;
+}
+
+li:hover {
+  background-color: #f0f0f0;
+}

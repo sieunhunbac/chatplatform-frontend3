@@ -1,0 +1,11 @@
+/* src/app/home/home.component.css */
+@import url('../../assets/css/styles.css');
+@font-face {
+  font-family: 'CustomFont';
+ src: url('../../assets/webfonts/fa-solid-900.woff2') format('woff2'),
+     url('../../assets/webfonts/fa-solid-900.woff') format('woff');
+
+}
+body {
+  font-family: 'CustomFont', sans-serif;
+}
