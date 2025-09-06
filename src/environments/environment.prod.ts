@@ -3,5 +3,5 @@ export const environment = {
   production: true,
   apiUrl: '/.netlify/functions',   // relative path đúng trên Netlify
   backendUrl: 'https://chatplatform3-11-yl72.onrender.com',
-  agoraAppId: 'a7cc419ef65d49e0b456180f70a2668e'
+  agoraAppId: '0230bbbb0b254599b2357e880af89d62'
 };
