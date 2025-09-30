@@ -2,23 +2,49 @@
 
   <h2 class="text-2xl font-bold mb-4 text-gray-700 flex items-center gap-2">📹 Video Call</h2>
 
-  <div class="flex justify-center mb-4">
-    <video id="local-player" autoplay playsinline muted
-           class="rounded-xl shadow-lg border border-gray-300 w-80 h-60 md:w-96 md:h-72">
-    </video>
+  <!-- Loading State -->
+  <div *ngIf="isJoining" class="flex flex-col items-center justify-center flex-1">
+    <div class="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-500 mb-4"></div>
+    <p class="text-gray-600">Đang kết nối video call...</p>
   </div>
 
-  <div id="remote-container" class="flex flex-wrap gap-4 justify-center mb-4"></div>
+  <!-- Error State -->
+  <div *ngIf="errorMessage && !isJoining" class="flex flex-col items-center justify-center flex-1">
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4">
+      <p class="font-bold">❌ Lỗi kết nối</p>
+      <p>{{ errorMessage }}</p>
+    </div>
+  </div>
 
-  <div class="flex justify-center gap-4 mt-auto">
-    <button (click)="toggleCamera()" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
-      🎥 Toggle Camera
-    </button>
-    <button (click)="toggleMic()" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">
-      🎤 Toggle Mic
-    </button>
-    <button (click)="toggleScreenShare()" class="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-colors">
-      🖥️ Share Screen
-    </button>
+  <!-- Video Call Content -->
+  <div *ngIf="!isJoining && !errorMessage" class="flex flex-col flex-1">
+    <div class="flex justify-center mb-4">
+      <video id="local-player" autoplay playsinline muted
+             class="rounded-xl shadow-lg border border-gray-300 w-80 h-60 md:w-96 md:h-72">
+      </video>
+    </div>
+
+    <div id="remote-container" class="flex flex-wrap gap-4 justify-center mb-4"></div>
+
+    <div class="flex justify-center gap-4 mt-auto">
+      <button 
+        (click)="toggleCamera()" 
+        [class]="isCameraOn ? 'bg-blue-500 hover:bg-blue-600' : 'bg-gray-500 hover:bg-gray-600'"
+        class="text-white px-4 py-2 rounded-lg transition-colors">
+        {{ isCameraOn ? '🎥 Camera On' : '🎥 Camera Off' }}
+      </button>
+      <button 
+        (click)="toggleMic()" 
+        [class]="isMicOn ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-500 hover:bg-gray-600'"
+        class="text-white px-4 py-2 rounded-lg transition-colors">
+        {{ isMicOn ? '🎤 Mic On' : '🎤 Mic Off' }}
+      </button>
+      <button 
+        (click)="toggleScreenShare()" 
+        [class]="isSharingScreen ? 'bg-red-500 hover:bg-red-600' : 'bg-purple-500 hover:bg-purple-600'"
+        class="text-white px-4 py-2 rounded-lg transition-colors">
+        {{ isSharingScreen ? '🖥️ Stop Share' : '🖥️ Share Screen' }}
+      </button>
+    </div>
   </div>
 </div>

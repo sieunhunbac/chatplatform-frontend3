@@ -1,29 +1,25 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { HttpClient } from '@angular/common/http';
+import { ApiConfig } from '../config/api.config';
+import { Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class RoomService {
-  // URL backend public
-  private baseUrl = 'https://chatplatform3-11-yl72.onrender.com/api/chatrooms';
-  private roomsUrl = 'https://chatplatform3-11-yl72.onrender.com/api/rooms';
-
   constructor(private http: HttpClient) {}
 
-  // Lấy danh sách user trong room
-  getUsersInRoom(roomId: string) {
-    return this.http.get<UserDto[]>(`${this.baseUrl}/${roomId}/users`);
+  /** Lấy danh sách user trong room */
+  getUsersInRoom(roomId: string): Observable<UserDto[]> {
+    return this.http.get<UserDto[]>(ApiConfig.ROOMS.getUsersInRoom(roomId));
   }
 
-  // Lấy tất cả phòng
-  getAllRooms() {
-    return this.http.get<any[]>(this.roomsUrl);
+  /** Lấy tất cả phòng */
+  getAllRooms(): Observable<any[]> {
+    return this.http.get<any[]>(ApiConfig.ROOMS.BASE);
   }
   
-  // Kick user khỏi room
-  kickUser(roomId: string, userId: number) {
-    return this.http.delete(`${this.roomsUrl}/${roomId}/kick/${userId}`);
+  /** Kick user khỏi room */
+  kickUser(roomId: string, userId: number): Observable<any> {
+    return this.http.delete(ApiConfig.ROOMS.kickUser(roomId, userId));
   }
 }
 

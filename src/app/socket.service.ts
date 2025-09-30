@@ -2,6 +2,9 @@ import { Injectable } from '@angular/core';
 import { Client, IMessage } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import { Subject, Observable } from 'rxjs';
+import { ApiConfig } from './config/api.config';
+import { AppConstants } from './config/app.constants';
+import { environment } from '../environments/environment';
 
 export interface ChatMessage {
   sender: string;
@@ -12,8 +15,7 @@ export interface ChatMessage {
   userId?: number;
   filename?: string;
   senderId?: number;
-    isMine?: boolean;
-
+  isMine?: boolean;
 }
 
 @Injectable({
@@ -23,30 +25,36 @@ export class SocketService {
   
   private client: Client;
   private messageSubject = new Subject<ChatMessage>();
-  private isConnected = false; // ✅ Để tránh kết nối nhiều lần
+  private isConnected = false;
 
   constructor() {
     this.client = new Client({
-      webSocketFactory: () => new SockJS('https://chatplatform3-11-yl72.onrender.com/ws'),
-      reconnectDelay: 5000,
-      debug: (str) => console.log('[STOMP]', str),
+      webSocketFactory: () => new SockJS(ApiConfig.WS_ENDPOINT),
+      reconnectDelay: environment.wsReconnectDelay,
+      debug: environment.enableDebugLogs ? (str) => console.log('[STOMP]', str) : () => {},
     });
   }
 
   connect(roomId: string): void {
     if (this.isConnected) {
-      console.log('⚠️ Already connected. Skipping...');
+      if (environment.enableDebugLogs) {
+        console.log('⚠️ Already connected. Skipping...');
+      }
       return;
     }
 
     this.client.onConnect = () => {
       this.isConnected = true;
-      console.log('✅ STOMP connected!');
+      if (environment.enableDebugLogs) {
+        console.log('✅ STOMP connected!');
+      }
 
-      const topic = `/topic/room/${roomId}`;
+      const topic = ApiConfig.STOMP.ROOM_TOPIC(roomId);
       this.client.subscribe(topic, (message: IMessage) => {
         if (message.body) {
-          console.log(`📩 Received from room ${roomId}:`, message.body);
+          if (environment.enableDebugLogs) {
+            console.log(`📩 Received from room ${roomId}:`, message.body);
+          }
           this.messageSubject.next(JSON.parse(message.body));
         }
       });
@@ -54,6 +62,15 @@ export class SocketService {
 
     this.client.onStompError = (frame) => {
       console.error('❌ STOMP error:', frame);
+      this.isConnected = false;
+      // Auto-reconnect handled by client
+    };
+
+    this.client.onDisconnect = () => {
+      if (environment.enableDebugLogs) {
+        console.log('🔌 STOMP disconnected');
+      }
+      this.isConnected = false;
     };
 
     this.client.activate();
@@ -62,22 +79,22 @@ export class SocketService {
   sendMessage(msg: ChatMessage) {
     if (this.client.connected) {
       this.client.publish({
-        destination: '/app/chat.sendMessage',
+        destination: ApiConfig.STOMP.SEND_MESSAGE,
         body: JSON.stringify(msg)
       });
     } else {
-      console.warn('⚠️ Not connected to STOMP.');
+      console.warn('⚠️ Not connected to STOMP. Message not sent.');
     }
   }
 
   addUser(msg: ChatMessage) {
     if (this.client.connected) {
       this.client.publish({
-        destination: '/app/chat.addUser',
+        destination: ApiConfig.STOMP.ADD_USER,
         body: JSON.stringify(msg)
       });
     } else {
-      console.warn('⚠️ Not connected to STOMP.');
+      console.warn('⚠️ Not connected to STOMP. User not added.');
     }
   }
 
@@ -86,23 +103,37 @@ export class SocketService {
   }
 
   sendJoinMessage(sender: string, roomId: string): void {
-  if (!this.client.connected) {
-    console.warn('⚠️ Not connected to STOMP.');
-    return;
+    if (!this.client.connected) {
+      console.warn('⚠️ Not connected to STOMP.');
+      return;
+    }
+
+    const message: ChatMessage = {
+      type: 'JOIN',
+      sender: sender,
+      roomId: roomId,
+      content: ''
+    };
+
+    this.client.publish({
+      destination: ApiConfig.STOMP.ADD_USER,
+      body: JSON.stringify(message)
+    });
   }
 
-  const message: ChatMessage = {
-    type: 'JOIN',
-    sender: sender,
-    roomId: roomId,
-    content: '' // hoặc thêm nội dung nếu muốn
-  };
+  disconnect(): void {
+    if (this.client.connected) {
+      this.client.deactivate();
+      this.isConnected = false;
+      if (environment.enableDebugLogs) {
+        console.log('🔌 STOMP manually disconnected');
+      }
+    }
+  }
 
-  this.client.publish({
-    destination: '/app/chat.addUser', // ✅ Đúng endpoint xử lý JOIN
-    body: JSON.stringify(message)
-  });
-}
+  isClientConnected(): boolean {
+    return this.isConnected;
+  }
 
 
 }

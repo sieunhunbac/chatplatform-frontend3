@@ -46,6 +46,7 @@ export class ChatComponent implements OnInit, OnDestroy {
 
     this.socketService.connect(this.roomId);
 
+    // Delay to ensure connection is established
     setTimeout(() => {
       this.socketService.addUser({
         sender: this.sender,
@@ -121,8 +122,10 @@ export class ChatComponent implements OnInit, OnDestroy {
       roomId: this.roomId,
       type: 'LEAVE'
     };
+    
+    // Use sendBeacon for reliable message delivery on page unload
     if (navigator.sendBeacon) {
-      const url = 'http://localhost:8080/api/leave';
+      const url = `${window.location.protocol}//${window.location.hostname}${window.location.port ? ':' + window.location.port : ''}/api/leave`;
       const data = JSON.stringify(leaveMsg);
       navigator.sendBeacon(url, new Blob([data], { type: 'application/json' }));
     } else {

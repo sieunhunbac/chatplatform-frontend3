@@ -1,14 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { ApiConfig } from './config/api.config';
+import { AppConstants } from './config/app.constants';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private user: any = null; // lưu user hiện tại
-  private readonly TOKEN_KEY = 'token';
-  private readonly USER_KEY = 'user';
-
-  // URL backend online Render
-  private readonly baseUrl = 'https://chatplatform3-11-yl72.onrender.com/api/auth';
+  private user: any = null;
 
   constructor(private http: HttpClient) {
     this.loadUserFromStorage();
@@ -16,7 +13,7 @@ export class AuthService {
 
   /** ✅ Tải user từ localStorage, có thể gọi lại bất cứ lúc nào */
   public loadUserFromStorage(): void {
-    const storedUser = localStorage.getItem(this.USER_KEY);
+    const storedUser = localStorage.getItem(AppConstants.STORAGE.USER);
     if (storedUser && storedUser !== 'undefined') {
       try {
         this.user = JSON.parse(storedUser);
@@ -43,20 +40,21 @@ export class AuthService {
 
   /** Lấy token JWT */
   getToken(): string | null {
-    return localStorage.getItem(this.TOKEN_KEY);
+    return localStorage.getItem(AppConstants.STORAGE.TOKEN);
   }
 
   /** Đăng xuất */
   logout(): void {
-    localStorage.removeItem(this.TOKEN_KEY);
-    localStorage.removeItem(this.USER_KEY);
+    localStorage.removeItem(AppConstants.STORAGE.TOKEN);
+    localStorage.removeItem(AppConstants.STORAGE.USER);
+    localStorage.removeItem(AppConstants.STORAGE.USERNAME);
     this.user = null;
   }
 
   /** Login */
   login(username: string, password: string) {
     return this.http.post<{ token: string; user: any }>(
-      `${this.baseUrl}/login`,
+      ApiConfig.AUTH.LOGIN,
       { username, password } 
     );
   }
@@ -64,19 +62,20 @@ export class AuthService {
   /** Register */
   register(username: string, password: string) {
     return this.http.post<{ token: string; user: any }>(
-      `${this.baseUrl}/register`,
+      ApiConfig.AUTH.REGISTER,
       { username, password }
     );
   }
 
   /** Lưu user + token vào service và localStorage */
   setUser(user: any, token: string): void {
-  if (!user || !token) return;
-  this.user = user;
-  localStorage.setItem(this.TOKEN_KEY, token);
-  localStorage.setItem('user', JSON.stringify(user)); // lưu user
-  console.log('💾 setUser xong', this.user, token);
-}
+    if (!user || !token) return;
+    this.user = user;
+    localStorage.setItem(AppConstants.STORAGE.TOKEN, token);
+    localStorage.setItem(AppConstants.STORAGE.USER, JSON.stringify(user));
+    localStorage.setItem(AppConstants.STORAGE.USERNAME, user.username || '');
+    console.log('💾 setUser xong', this.user);
+  }
 
   /** Lấy headers kèm token JWT */
   getAuthHeaders(): { headers: any } {
